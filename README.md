@@ -68,7 +68,7 @@ curl http://localhost:8000/
 
 ### Publicar Comentário no Gist
 ```bash
-curl -X POST "http://localhost:8000/weather-comment/São Paulo"
+curl -X POST "http://localhost:8000/weather-comment/São%20Paulo"
 ```
 
 ## Testes
@@ -88,7 +88,7 @@ uvicorn main:app --reload
 ```
 3. Teste a criação de um comentário enviando o nome da cidade:
 ```bash
-curl -X POST "http://localhost:8000/weather-comment/São Paulo"
+curl -X POST "http://localhost:8000/weather-comment/São%20Paulo"
 ```
 4. A API automaticamente irá criar o Gist com a informação do clima. A resposta devolvida irá conter o `gist_url`. Clique no link e verifique o comentário recém-criado.
 
