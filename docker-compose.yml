@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  weather-api:
+    build: .
+    container_name: caiena-teste-weather-comment-api
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
+      - OPENWEATHER_API_URL=${OPENWEATHER_API_URL}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+    restart: unless-stopped

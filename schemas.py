@@ -50,7 +50,7 @@ class Forecast(BaseModel):
     })
 
     city: str = Field(..., description="Nome da cidade", min_length=1, max_length=100)
-    forecast_days: List[ForecastDay] = Field(..., description="Lista de previsões diárias", min_items=1, max_items=5)
+    forecast_days: List[ForecastDay] = Field(..., description="Lista de previsões diárias", min_length=1, max_length=5)
 
     @field_validator("city", mode="before")
     @classmethod

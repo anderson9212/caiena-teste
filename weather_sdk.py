@@ -19,6 +19,7 @@ class OpenWeatherMapSDK:
             raise ValueError("Chave da API do OpenWeatherMap é obrigatória")
 
         self.base_url = Config.OPENWEATHER_BASE_URL
+        self.timeout = 10
         logger.debug("SDK OpenWeatherMap inicializado com sucesso")
 
     def get_current_weather(self, city: str) -> CurrentWeather:
@@ -28,7 +29,7 @@ class OpenWeatherMapSDK:
             url = f"{self.base_url}/weather"
             params = {"q": city, "appid": self.api_key, "units": "metric", "lang": "pt_br"}
 
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, timeout=self.timeout)
             response.raise_for_status()
             data = response.json()
 
@@ -67,15 +68,20 @@ class OpenWeatherMapSDK:
             url = f"{self.base_url}/forecast"
             params = {"q": city, "appid": self.api_key, "units": "metric", "lang": "pt_br"}
 
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, timeout=self.timeout)
             response.raise_for_status()
             data = response.json()
 
             logger.debug(f"Dados de previsão recebidos para {city}: {len(data['list'])} itens")
 
+            today_str = datetime.now().strftime("%d/%m")
             daily_temps: Dict[str, List[float]] = {}
             for item in data["list"]:
                 date = datetime.fromtimestamp(item["dt"]).strftime("%d/%m")
+                
+                if date == today_str:
+                    continue
+                
                 temp = float(item["main"]["temp"])
 
                 if date not in daily_temps:
