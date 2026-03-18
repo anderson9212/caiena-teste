@@ -4,9 +4,9 @@ from fastapi import FastAPI, HTTPException, Path
 from pydantic import BaseModel
 from config import Config
 from exceptions import WeatherCommentAPIException
-from schemas import WeatherComment
 from weather_sdk import OpenWeatherMapSDK
 from weather_service import WeatherCommentService
+from github_service import GitHubService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -46,9 +46,18 @@ class ErrorResponse(BaseModel):
     details: Optional[dict] = None
 
 
+class GistCommentResponse(BaseModel):
+    gist_id: str
+    gist_url: str
+    comment: str
+    city: str
+    created_at: str
+
+
 try:
     weather_sdk = OpenWeatherMapSDK()
-    weather_service = WeatherCommentService(weather_sdk)
+    github_service = GitHubService()
+    weather_service = WeatherCommentService(weather_sdk, github_service)
     logger.info("Serviços inicializados com sucesso")
 except ValueError as e:
     logger.error(f"Erro de configuração: {e}")
@@ -73,23 +82,30 @@ async def health_check() -> HealthResponse:
     )
 
 
-@app.get("/weather/{city}", response_model=WeatherComment, tags=["Weather"])
-async def get_weather_data(
+@app.post("/weather-comment/{city}", response_model=GistCommentResponse, tags=["Weather Comments"])
+async def create_weather_comment_gist(
     city: str = Path(..., description="Nome da cidade", min_length=1),
-) -> WeatherComment:
-    logger.info(f"Requisição de dados de clima para: {city}")
+) -> GistCommentResponse:
+    logger.info(f"Requisição de criar gist com comentário de clima: {city}")
     
     if not weather_service:
         logger.error("Serviço não inicializado")
         raise HTTPException(status_code=500, detail="Serviço não inicializado")
     
     try:
-        weather_comment = weather_service.create_weather_comment(city)
-        logger.info(f"Dados de clima obtidos com sucesso para {city}")
-        return weather_comment
+        gist_info = weather_service.create_weather_gist(city)
+        logger.info(f"Gist criado com sucesso para {city}")
+        
+        return GistCommentResponse(
+            gist_id=gist_info["id"],
+            gist_url=gist_info["url"],
+            comment=gist_info["comment"],
+            city=city,
+            created_at=str(gist_info["created_at"]),
+        )
     
     except WeatherCommentAPIException as e:
-        logger.warning(f"Falha ao obter dados de clima: {e.message}")
+        logger.warning(f"Falha ao criar gist: {e.message}")
         raise HTTPException(status_code=e.status_code, detail=e.message)
 
 
